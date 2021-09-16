@@ -1,0 +1,5 @@
+/input/*
+!/input/.gitkeep
+/output/*
+!/output/.gitkeep
+/src/openslide-python/
