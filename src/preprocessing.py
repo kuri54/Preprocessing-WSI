@@ -7,7 +7,6 @@ from openslide.deepzoom import DeepZoomGenerator
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 from PIL import Image
 
 from scipy.ndimage.morphology import binary_fill_holes
@@ -26,6 +25,7 @@ def open_slide(slide_num, folder):
     filename = os.path.join(folder, slide_names[slide_num])
 
     slide = openslide.open_slide(filename)
+
     return slide
 
 def create_tile_generator(slide, tile_size, overlap):
@@ -39,6 +39,7 @@ def create_tile_generator(slide, tile_size, overlap):
     Note: 抽出されたタイル画像はShape(tile_size, tile_size, channels)を持つ
     '''
     generator = DeepZoomGenerator(slide, tile_size=tile_size, overlap=overlap, limit_bounds=True)
+
     return generator
 
 def get_20x_zoom_level(slide, generator):
@@ -240,8 +241,11 @@ def process(slide_num, folder, output_dir, tile_size, over_lap, tissue_threshold
     :param tissue_threshold: 組織割合の閾値
     :param sample_size: 生成されるタイル画像の幅と高さを指定（正方形）
     '''
+    # ファイル名を取得
+    slide_name = get_file_name(slide_num, folder)
+
     # WSIに対して可能な全てのタイル画像のインデックスを生成
-    print('Process start....')
+    print(f'Process start....: {slide_name}')
     tile_idx = process_slide(slide_num, folder, tile_size, over_lap)
 
     # タイルインデックスからタイル画像を生成
@@ -255,16 +259,13 @@ def process(slide_num, folder, output_dir, tile_size, over_lap, tissue_threshold
     # タイル画像をより小さなタイル画像にする
     samples = [n for i in filtered_tiles for n in process_tile(i, sample_size)]
 
-    # ファイル名を取得
-    slide_name = get_file_name(slide_num, folder)
-
     # 保存用のディレクトリを作成
     make_dirs(output_dir, slide_name)
 
     # flatten vectorから画像をPILフォーマットに変換し保存
     print('Saving Tile Images....')
     for sample_num, sample in enumerate(tqdm(samples)):
-        sample = sample[1]
+        slide_num, sample = sample
         save_jpeg_images(sample, sample_num, slide_name)
 
 if __name__ == '__main__':
@@ -278,7 +279,6 @@ if __name__ == '__main__':
     parser.add_argument('--tissue_threshold', default=0.9, type=float)
     parser.add_argument('--sample_size', default=256, type=int)
 
-    # コマンドライン引数の読み込み
     args = parser.parse_args()
 
     process(
