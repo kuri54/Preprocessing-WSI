@@ -206,30 +206,35 @@ def get_file_name(slide_num, folder):
     # 拡張子はいらない
     return filename[0]
 
-def make_dirs(output_dir, slide_name):
-    '''保存用のディレクトリを作成
+def make_dirs(output_dir, slide_name, sample_size):
+    '''保存用のディレクトリを作成し、ディレクトリ名を返す
+    :return 保存ディレクトリ名
     '''
-    if not os.path.exists(f'{output_dir + slide_name}'):
-        os.mkdir(f'{output_dir + slide_name}')
+    output_dir_name = output_dir + str(sample_size) + '/' + str(slide_name)
+    os.makedirs(output_dir_name, exist_ok=False)
 
-def save_jpeg_images(sample, sample_num, slide_name):
+    return output_dir_name
+
+def save_jpeg_images(sample, sample_num, sample_size, output_dir_name, slide_name):
     '''flattenされたvectorから画像をjpegで保存
     :param sample: (channels * sample_size_x * sample_size_y)
     :param sample_num: サンプルの番号 連番をファイル名につけるために必要
+    :param sample_size: 生成されるタイル画像の幅と高さを指定（正方形）
+    :param output_dir_name: 保存ディレクトリ名
     :param slide_name: ファイル名
     '''
     # 画像長を抽出し、チャネル数を算出
     length = sample.shape[0]
-    channels = int(length / (256 * 256))
+    channels = int(length / (sample_size * sample_size))
 
     # 配列を(H*W*C)の形式に変換
-    image = sample.astype('uint8').reshape((channels, 256, 256)).transpose(1,2,0)
+    image = sample.astype('uint8').reshape((channels, sample_size, sample_size)).transpose(1,2,0)
 
     # PILフォーマットに変換
     pil_image = Image.fromarray(image)
 
     # 保存 WSI名_連番の形式で
-    pil_image.save(f'../output/{slide_name}/{slide_name}_{sample_num}.jpeg')
+    pil_image.save(f'{output_dir_name}/{slide_name}_{sample_num}.jpeg')
 
 def process(slide_num, folder, output_dir, tile_size, over_lap, tissue_threshold, sample_size):
     '''
@@ -259,14 +264,14 @@ def process(slide_num, folder, output_dir, tile_size, over_lap, tissue_threshold
     # タイル画像をより小さなタイル画像にする
     samples = [n for i in filtered_tiles for n in process_tile(i, sample_size)]
 
-    # 保存用のディレクトリを作成
-    make_dirs(output_dir, slide_name)
+    # 保存用のディレクトリを作成してディレクトリ名を取得
+    output_dir_name = make_dirs(output_dir, slide_name, sample_size)
 
     # flatten vectorから画像をPILフォーマットに変換し保存
     print('Saving Tile Images....')
     for sample_num, sample in enumerate(tqdm(samples)):
         slide_num, sample = sample
-        save_jpeg_images(sample, sample_num, slide_name)
+        save_jpeg_images(sample, sample_num, sample_size, output_dir_name, slide_name)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
