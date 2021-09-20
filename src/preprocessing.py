@@ -32,7 +32,7 @@ def create_tile_generator(slide, tile_size, overlap):
     '''WSIからタイル画像を抽出するためのgeneratorを生成する
 
     :param slide: OpenSlide objectのWSI
-    :param tile_size: 生成されるタイル画像ｇあの幅と高さを指定（正方形）
+    :param tile_size: 生成されるタイル画像の幅と高さを指定（正方形）
     :param overlap: タイル間のオーバーラップのピクセル数
 
     :return generator
