@@ -288,7 +288,6 @@ def post_process(filtered_tiles, slide_num, folder, output_dir, sample_size):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    # parser.add_argument('--slide_num', type=int, help='0始まりなことに注意')
     parser.add_argument('--folder', default='../input/')
     parser.add_argument('--output_dir', default='../output/')
     parser.add_argument('--tile_size', default=1024, type=int)
