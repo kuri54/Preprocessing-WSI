@@ -1,6 +1,11 @@
 import os
 import math
 import argparse
+from tqdm import tqdm
+from rich import print
+
+import multiprocessing
+from multiprocessing import Pool
 
 import openslide
 from openslide.deepzoom import DeepZoomGenerator
@@ -12,9 +17,6 @@ from scipy.ndimage.morphology import binary_fill_holes
 from skimage.color import rgb2gray
 from skimage.feature import canny
 from skimage.morphology import binary_closing, binary_dilation, disk
-
-from rich import print
-from rich.progress import track
 
 def open_slide(slide_num, folder):
     '''画像番号を指定してWSIを開く
@@ -238,6 +240,10 @@ def save_jpeg_images(sample, sample_num, sample_size, output_dir_name, slide_nam
     # 保存 WSI名_連番の形式で
     pil_image.save(f'{output_dir_name}/{slide_name}_{sample_num}.jpeg')
 
+# keep_tileのラッパー
+def wrapper_keep_tile(args):
+    return keep_tile(*args)
+
 def pre_process(slide_num, folder, tile_size, over_lap, tissue_threshold):
     '''
     :param slide_num: スライド番号
@@ -256,10 +262,16 @@ def pre_process(slide_num, folder, tile_size, over_lap, tissue_threshold):
     tile_idx = process_slide(slide_num, folder, tile_size, over_lap)
 
     # タイルインデックスからタイル画像を生成
-    tiles = [process_tile_index(i, folder) for i in track(tile_idx, description='[bold green]Generate tiled image from index....')]
+    print('[bold green]Generate tiled image from index....')
+    tiles = [process_tile_index(i, folder) for i in tqdm(tile_idx)]
 
-    # タイル画像のフィルタリング
-    filtered_tiles = list(filter(lambda tile: keep_tile(tile, tile_size, tissue_threshold), track(tiles, description='[bold green]Filtering a tile image....')))
+    # タイル画像のフィルタリング -> multiprocessingで速く処理
+    # 引数をいじれるようにargsにまとめて処理させる
+    print('[bold green]Filtering a tile image....')
+    args = [[i, tile_size, tissue_threshold] for i in tiles]
+
+    with Pool(multiprocessing.cpu_count()) as pool:
+        filtered_tiles = [i for i, keep in zip(tiles, pool.map(wrapper_keep_tile, tqdm(args))) if keep]
 
     return filtered_tiles
 
@@ -281,7 +293,7 @@ def post_process(filtered_tiles, slide_num, folder, output_dir, sample_size):
     output_dir_name = make_dirs(output_dir, slide_name, sample_size)
 
     # flatten vectorから画像をPILフォーマットに変換し保存
-    for sample_num, sample in enumerate(track(samples)):
+    for sample_num, sample in enumerate(tqdm(samples)):
         slide_num, sample = sample
         save_jpeg_images(sample, sample_num, sample_size, output_dir_name, slide_name)
 
