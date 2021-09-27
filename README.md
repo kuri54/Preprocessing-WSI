@@ -2,6 +2,11 @@
 WSIをタイル状に分割し、背景やゴミがある画像を取り除いたものを保存する。
 x20相当とx40相当のタイル画像が保存される。
 
+## Update
+### Sep 27, 2021
+* 背景除去とノイズ除去を行うコード（keep_tile）をマルチプロセスで動くようにコードを修正  
+    サンプルスライド（tile枚数1900枚）では約25分 -> 約5分へ改善
+
 ## 対応フォーマット
 * Aperio (.svs, .tif)
 * Hamamatsu (.ndpi, .vms, .vmu)
@@ -23,6 +28,7 @@ x20相当とx40相当のタイル画像が保存される。
 * scipy==1.4.1
 * scikit-image==0.18.3
 * rich==10.10.0
+* tqdm==4.36.1
 
 ## Installation
 1. [Install OpenSlide](https://openslide.org/download/)  
