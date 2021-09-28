@@ -1,6 +1,7 @@
 import os
 import math
 import argparse
+from posixpath import dirname
 from tqdm import tqdm
 from rich import print
 
@@ -212,7 +213,7 @@ def get_file_name(slide_num, folder):
 
 def make_dirs(output_dir, slide_name, sample_size):
     '''保存用のディレクトリを作成し、ディレクトリ名を返す
-    :return 保存ディレクトリ名
+    :return 保存ディレクトリ名, 倍率名
     '''
     if sample_size == 256:
         dir_name = 'x40'
@@ -220,10 +221,13 @@ def make_dirs(output_dir, slide_name, sample_size):
     elif sample_size == 512:
         dir_name = 'x20'
 
+    elif sample_size == 1024:
+        dir_name = 'x10'
+
     output_dir_name = output_dir + dir_name + '/' + str(slide_name)
     os.makedirs(output_dir_name, exist_ok=True)
 
-    return output_dir_name
+    return output_dir_name, dir_name
 
 def save_jpeg_images(sample, sample_num, sample_size, output_dir_name, slide_name):
     '''flattenされたvectorから画像をjpegで保存
@@ -246,8 +250,10 @@ def save_jpeg_images(sample, sample_num, sample_size, output_dir_name, slide_nam
     # 保存 WSI名_連番の形式で
     pil_image.save(f'{output_dir_name}/{slide_name}_{sample_num}.jpeg')
 
-# keep_tileのラッパー
 def wrapper_keep_tile(args):
+    '''keep_tileのラッパー
+    multiprocessing時に必要
+    '''
     return keep_tile(*args)
 
 def pre_process(slide_num, folder, tile_size, over_lap, tissue_threshold):
@@ -295,10 +301,11 @@ def post_process(filtered_tiles, slide_num, folder, output_dir, sample_size):
     # タイル画像をより小さなタイル画像にする
     samples = [n for i in filtered_tiles for n in process_tile(i, sample_size)]
 
-    # 保存用のディレクトリを作成してディレクトリ名を取得
-    output_dir_name = make_dirs(output_dir, slide_name, sample_size)
+    # 保存用のディレクトリを作成してディレクトリ名と倍率名を取得
+    output_dir_name, dir_name = make_dirs(output_dir, slide_name, sample_size)
 
     # flatten vectorから画像をPILフォーマットに変換し保存
+    print(f'[bold red]Saving {dir_name}zoom Level Tile Images....')
     for sample_num, sample in enumerate(tqdm(samples)):
         slide_num, sample = sample
         save_jpeg_images(sample, sample_num, sample_size, output_dir_name, slide_name)
@@ -311,8 +318,7 @@ if __name__ == '__main__':
     parser.add_argument('--tile_size', default=1024, type=int)
     parser.add_argument('--over_lap', default=0, type=int)
     parser.add_argument('--tissue_threshold', default=0.9, type=float, help='数値を小さくするほど余白部分を含んだ画像を残すようになる')
-    parser.add_argument('--sample_size', default=256, type=int)
-    parser.add_argument('--zoom40', action='store_true', help='x40のタイル画像のみを保存したい場合')
+    parser.add_argument('--sample_size', nargs='*', default=[256, 512, 1024], help='固定倍率のみを保存したい場合 -> x40:256, x20:512, x10:1024を引数指定する')
 
     args = parser.parse_args()
 
@@ -325,35 +331,11 @@ if __name__ == '__main__':
             tissue_threshold=args.tissue_threshold
             )
 
-        # 通常はx40とx20のタイル画像をそれぞれ保存する
-        # --zoom40を指定した場合はx40のタイル画像のみを保存する
-        if args.zoom40:
-            print('[bold red]Saving x40zoom Level Tile Images....')
+        for arg in args.sample_size:
             post_process(
                 filtered_tiles,
                 slide_num=slide_num,
                 folder=args.folder,
                 output_dir=args.output_dir,
-                sample_size=args.sample_size
+                sample_size=int(arg) # int型にしておかないとmake_dirsでエラーが出る
                 )
-
-        else:
-            print('[bold red]Saving x40zoom Level Tile Images....')
-            post_process(
-                filtered_tiles,
-                slide_num=slide_num,
-                folder=args.folder,
-                output_dir=args.output_dir,
-                sample_size=args.sample_size
-                )
-
-            print('[bold red]Saving x20zoom Level Tile Images....')
-            post_process(
-                filtered_tiles,
-                slide_num=slide_num,
-                folder=args.folder,
-                output_dir=args.output_dir,
-                sample_size=512
-                )
-
-
