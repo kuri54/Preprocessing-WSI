@@ -214,7 +214,13 @@ def make_dirs(output_dir, slide_name, sample_size):
     '''保存用のディレクトリを作成し、ディレクトリ名を返す
     :return 保存ディレクトリ名
     '''
-    output_dir_name = output_dir + str(sample_size) + '/' + str(slide_name)
+    if sample_size == 256:
+        dir_name = 'x40'
+
+    elif sample_size == 512:
+        dir_name = 'x20'
+
+    output_dir_name = output_dir + dir_name + '/' + str(slide_name)
     os.makedirs(output_dir_name, exist_ok=True)
 
     return output_dir_name
