@@ -310,7 +310,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', default='../output/')
     parser.add_argument('--tile_size', default=1024, type=int)
     parser.add_argument('--over_lap', default=0, type=int)
-    parser.add_argument('--tissue_threshold', default=0.9, type=float)
+    parser.add_argument('--tissue_threshold', default=0.9, type=float, help='数値を小さくするほど余白部分を含んだ画像を残すようになる')
     parser.add_argument('--sample_size', default=256, type=int)
     parser.add_argument('--zoom40', action='store_true', help='x40のタイル画像のみを保存したい場合')
 

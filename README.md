@@ -51,5 +51,5 @@ x20相当とx40相当のタイル画像が保存される。
 1. `cd src`
 2. `python preprocessing.py`
 
-## 引数
+## Argument
 `python preprocessing.py --help`
