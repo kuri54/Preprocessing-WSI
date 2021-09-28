@@ -1,8 +1,12 @@
 # Preprocessing WSI
 WSIをタイル状に分割し、背景やゴミがある画像を取り除いたものを保存する。
-x20相当とx40相当のタイル画像が保存される。
+x10、x20、x40相当のタイル画像が保存される。
 
 ## Update
+### Sep 28, 2021
+* デフォルトでx10のタイル画像を保存するように修正  
+それに伴ったコードの微修正
+
 ### Sep 27, 2021
 * 背景除去とノイズ除去を行うコード（keep_tile）をマルチプロセスで動くようにコードを修正  
     サンプルスライド（tile枚数1900枚）では約25分 -> 約5分へ改善
@@ -50,6 +54,13 @@ x20相当とx40相当のタイル画像が保存される。
 ## Usage
 1. `cd src`
 2. `python preprocessing.py`
+
+## Example
+* 細胞診などの余白が多い標本を処理する場合  
+`python preprocessing.py --tissue_threshold 0.3`
+
+* x20とx40倍相当のタイル画像のみを保存したい場合  
+`python preprocessing.py --sample_size 256 512`
 
 ## Argument
 `python preprocessing.py --help`
