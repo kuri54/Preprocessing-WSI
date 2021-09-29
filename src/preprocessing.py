@@ -248,7 +248,7 @@ def save_jpeg_images(sample, sample_num, sample_size, output_dir_name, slide_nam
     pil_image = Image.fromarray(image)
 
     # 保存 WSI名_連番の形式で
-    pil_image.save(f'{output_dir_name}/{slide_name}_{sample_num}.jpeg')
+    pil_image.save(f'{output_dir_name}/{slide_name}_{sample_num}.jpg')
 
 def wrapper_keep_tile(args):
     '''keep_tileのラッパー
