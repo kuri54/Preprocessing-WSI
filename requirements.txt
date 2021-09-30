@@ -1,0 +1,6 @@
+pandas
+Pillow
+scipy
+scikit-image
+rich
+tqdm
