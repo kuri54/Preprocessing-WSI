@@ -23,16 +23,16 @@ x10、x20、x40相当のタイル画像が保存される。
 * Generic tiled TIFF (.tif)
 
 ## Rquirements
-下記の環境で動作確認済み（ほぼ全てのライブラリが最新版のもので動く）
+下記の環境で動作確認済み（全てのライブラリが最新版のもので動く）
 * Python 3.7.4
 * openslide-python==1.1.2
-* numpy==1.17.2
-* pandas==0.25.1
-* Pillow==6.2.0
-* scipy==1.4.1
-* scikit-image==0.18.3
-* rich==10.10.0
-* tqdm==4.36.1
+* numpy
+* pandas
+* Pillow
+* scipy
+* scikit-image
+* rich
+* tqdm
 
 ## Installation
 1. [Install OpenSlide](https://openslide.org/download/)  
