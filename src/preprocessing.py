@@ -19,15 +19,15 @@ from skimage.color import rgb2gray
 from skimage.feature import canny
 from skimage.morphology import binary_closing, binary_dilation, disk
 
-def open_slide(slide_num, folder):
+def open_slide(slide_num, input_dir):
     '''画像番号を指定してWSIを開く
     :param slide_num: スライド番号
-    :param folder: WSIが入っているディレクトリ
+    :param input_dir: WSIが入っているディレクトリ
 
     :return OpenSlide objectのWSI
     '''
-    slide_names = os.listdir(folder)
-    filename = os.path.join(folder, slide_names[slide_num])
+    slide_names = os.listdir(input_dir)
+    filename = os.path.join(input_dir, slide_names[slide_num])
 
     slide = openslide.open_slide(filename)
 
@@ -76,19 +76,19 @@ def get_20x_zoom_level(slide, generator):
 
     return level
 
-def process_slide(slide_num, folder, tile_size, overlap):
+def process_slide(slide_num, input_dir, tile_size, overlap):
     '''WSIに対して可能な全てのタイル画像のインデックスを生成
     を生成
 
     :param slide_num: スライド番号
-    :param folder: WSIが入っているディレクトリ
+    :param input_dir: WSIが入っているディレクトリ
     :param tile_size: 生成されるタイル画像の幅と高さを指定（正方形）
     :param overlap: タイル間のオーバーラップのピクセル数
 
     :return (slide_num, tile_size, overlap, zoom_level, col, row)のリスト
     '''
     # WSIを開く
-    slide = open_slide(slide_num, folder)
+    slide = open_slide(slide_num, input_dir)
 
     # generatorを生成
     generator = create_tile_generator(slide, tile_size, overlap)
@@ -105,10 +105,10 @@ def process_slide(slide_num, folder, tile_size, overlap):
 
     return tile_indices
 
-def process_tile_index(tile_index, folder):
+def process_tile_index(tile_index, input_dir):
     '''タイルインデックスからタイル画像を生成
     :param tile_index: 抽出するタイルを表すインデックスタプル
-    :param folder: WSIが入っているディレクトリ
+    :param input_dir: WSIが入っているディレクトリ
 
     :return (slide_num, tile)のタプル
     :Note RGB形式の3次元Numpy配列 (tile_size, tile_size, channels)
@@ -116,7 +116,7 @@ def process_tile_index(tile_index, folder):
     slide_num, tile_size, overlap, zoom_level, col, row = tile_index
 
     # WSIを開く
-    slide = open_slide(slide_num, folder)
+    slide = open_slide(slide_num, input_dir)
 
     # generatorを生成
     generator = create_tile_generator(slide, tile_size, overlap)
@@ -201,11 +201,11 @@ def process_tile(tile_tuple, sample_size):
 
     return samples
 
-def get_file_name(slide_num, folder):
+def get_file_name(slide_num, input_dir):
     '''ファイル名を取得
     :return 拡張子を除いたファイル名
     '''
-    slide_names = os.listdir(folder)
+    slide_names = os.listdir(input_dir)
     filename = slide_names[slide_num].split('.')
 
     # 拡張子はいらない
@@ -256,10 +256,10 @@ def wrapper_keep_tile(args):
     '''
     return keep_tile(*args)
 
-def pre_process(slide_num, folder, tile_size, over_lap, tissue_threshold):
+def pre_process(slide_num, input_dir, tile_size, over_lap, tissue_threshold):
     '''
     :param slide_num: スライド番号
-    :param folder: WSIが入っているディレクトリ
+    :param input_dir: WSIが入っているディレクトリ
     :param tile_size: 生成されるタイル画像の幅と高さを指定（正方形）
     :param over_lap: タイル間のオーバーラップのピクセル数
     :param tissue_threshold: 組織割合の閾値
@@ -267,15 +267,15 @@ def pre_process(slide_num, folder, tile_size, over_lap, tissue_threshold):
     :return フィルタリングされたタイル画像
     '''
     # ファイル名を取得
-    slide_name = get_file_name(slide_num, folder)
+    slide_name = get_file_name(slide_num, input_dir)
 
     # WSIに対して可能な全てのタイル画像のインデックスを生成
     print(f'Process start....: [u]{slide_name}[/u]')
-    tile_idx = process_slide(slide_num, folder, tile_size, over_lap)
+    tile_idx = process_slide(slide_num, input_dir, tile_size, over_lap)
 
     # タイルインデックスからタイル画像を生成
     print('[bold green]Generate tiled image from index....')
-    tiles = [process_tile_index(i, folder) for i in tqdm(tile_idx)]
+    tiles = [process_tile_index(i, input_dir) for i in tqdm(tile_idx)]
 
     # タイル画像のフィルタリング -> multiprocessingで速く処理
     # 引数をいじれるようにargsにまとめて処理させる
@@ -287,16 +287,16 @@ def pre_process(slide_num, folder, tile_size, over_lap, tissue_threshold):
 
     return filtered_tiles
 
-def post_process(filtered_tiles, slide_num, folder, output_dir, sample_size):
+def post_process(filtered_tiles, slide_num, input_dir, output_dir, sample_size):
     '''
     :param filtered_tiles: フィルタリングされたタイル画像
     :param slide_num: スライド番号
-    :param folder: WSIが入っているディレクトリ
+    :param input_dir: WSIが入っているディレクトリ
     :param output_dir: タイル画像を保存するディレクトリ
     :param sample_size: 生成されるタイル画像の幅と高さを指定（正方形）
     '''
     # ファイル名を取得
-    slide_name = get_file_name(slide_num, folder)
+    slide_name = get_file_name(slide_num, input_dir)
 
     # タイル画像をより小さなタイル画像にする
     samples = [n for i in filtered_tiles for n in process_tile(i, sample_size)]
@@ -313,19 +313,19 @@ def post_process(filtered_tiles, slide_num, folder, output_dir, sample_size):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--folder', default='../input/')
-    parser.add_argument('--output_dir', default='../output/')
-    parser.add_argument('--tile_size', default=1024, type=int)
-    parser.add_argument('--over_lap', default=0, type=int)
-    parser.add_argument('--tissue_threshold', default=0.9, type=float, help='数値を小さくするほど余白部分を含んだ画像を残すようになる')
-    parser.add_argument('--sample_size', nargs='*', default=[256, 512, 1024], help='固定倍率のみを保存したい場合 -> x40:256, x20:512, x10:1024を引数指定する')
+    parser.add_argument('-i', '--input_dir', default='../input/', help='pathの最後に/をつけることを忘れずに')
+    parser.add_argument('-o', '--output_dir', default='../output/', help='pathの最後に/をつけることを忘れずに')
+    parser.add_argument('-t', '--tile_size', default=1024, type=int)
+    parser.add_argument('-l', '--over_lap', default=0, type=int)
+    parser.add_argument('-u', '--tissue_threshold', default=0.9, type=float, help='数値を小さくするほど余白部分を含んだ画像を残すようになる')
+    parser.add_argument('-s', '--sample_size', nargs='*', default=[256, 512, 1024], help='固定倍率のみを保存したい場合 -> x40:256, x20:512, x10:1024を引数指定する')
 
     args = parser.parse_args()
 
-    for slide_num, _ in enumerate(os.listdir(args.folder)):
+    for slide_num, _ in enumerate(os.listdir(args.input_dir)):
         filtered_tiles = pre_process(
             slide_num=slide_num,
-            folder=args.folder,
+            input_dir=args.input_dir,
             tile_size=args.tile_size,
             over_lap=args.over_lap,
             tissue_threshold=args.tissue_threshold
@@ -335,7 +335,7 @@ if __name__ == '__main__':
             post_process(
                 filtered_tiles,
                 slide_num=slide_num,
-                folder=args.folder,
+                input_dir=args.input_dir,
                 output_dir=args.output_dir,
                 sample_size=int(arg) # int型にしておかないとmake_dirsでエラーが出る
                 )
