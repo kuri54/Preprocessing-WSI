@@ -11,6 +11,7 @@ from multiprocessing import Pool
 import openslide
 from openslide.deepzoom import DeepZoomGenerator
 import numpy as np
+np.bool = np.bool_
 import pandas as pd
 from PIL import Image
 
