@@ -15,7 +15,7 @@ np.bool = np.bool_
 import pandas as pd
 from PIL import Image
 
-from scipy.ndimage.morphology import binary_fill_holes
+from scipy.ndimage import binary_fill_holes
 from skimage.color import rgb2gray
 from skimage.feature import canny
 from skimage.morphology import binary_closing, binary_dilation, disk
