@@ -60,7 +60,7 @@ Confirmed to work in the following environment (compatible with the latest versi
  
 ## Usage
 1. `cd src`
-2. `python preprocessing.py --<args>`
+2. `python preprocessing.py --<arg1> --<arg2>`
 
 ## Example
 * In cases of processing specimens like cytology samples that have many margins.  
