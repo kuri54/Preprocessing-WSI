@@ -49,19 +49,19 @@ x10、x20、x40相当のタイル画像が保存される。
 
 2. `pip install openslide-python`
 
-## フォルダ構成
+## ディレクトリ構成
 <pre>
 .   
-├─ input .. 処理したいWSIを入れるフォルダ  
-├─ output .. 処理後のタイル画像が保存されるフォルダ  
-├─ notebooks .. コード確認用のnotebooks  
+├─ input .. 処理したいWSIを入れるディレクトリ  
+├─ output .. 処理後のタイル画像が保存されるディレクトリ  
+├─ notebooks .. コード確認用のNotebooks  
 └─ src  
 　　└─ preprocessing.py
 </pre>
  
 ## Usage
 1. `cd src`
-2. `python preprocessing.py`
+2. `python preprocessing.py --<arg1> --<arg2>`
 
 ## Example
 * 細胞診などの余白が多い標本を処理する場合  
