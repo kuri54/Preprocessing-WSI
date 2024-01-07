@@ -1,3 +1,5 @@
+| [日本語](https://github.com/kuri54/Preprocessing-WSI/blob/main/README-JP.md) |
+
 # Preprocessing WSI
 Divide Whole Slide Images (WSI) into tile-like segments and save the images after removing backgrounds and debris.  
 Tile images equivalent to x10, x20, and x40 magnifications are stored.
